@@ -21,7 +21,7 @@ with a strong focus on infrastructure automation, containerization, and reliable
 - **Cloud:** AWS (EC2, S3, IAM, VPC)
 - **Containers:** Docker
 - **Infrastructure as Code:** Terraform
-- **CI/CD:** GitHub Actions
+- **CI/CD:** Jenkins
 - **Version Control:** Git & GitHub
 - **OS:** Linux
 - **Orchestration:** Kubernetes (basics)
