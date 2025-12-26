@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 
 // ✅ Import SQS utility
-const { sendToSQS } = require('./utils/sqsClient');
+//const { sendToSQS } = require('./utils/sqsClient');
 
 // Create Express app
 const app = express();
