@@ -9,7 +9,7 @@ This project demonstrates the deployment of a simple web application on AWS EC2 
 
 The architecture consists of an AWS EC2 instance launched within a VPC and secured using Security Groups. The application is hosted on the EC2 instance using a web server and accessed via the instance’s public IP address.
 
-![Architecture Diagram](../diagrams/ec2-webapp.png)
+![alt text](Architecture.png-1.png)
 
 ---
 
