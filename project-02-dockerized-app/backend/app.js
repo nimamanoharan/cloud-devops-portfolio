@@ -1,12 +1,8 @@
 // Import necessary modules
-require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const path = require('path');
-
-// ✅ Import SQS utility
-//const { sendToSQS } = require('./utils/sqsClient');
 
 // Create Express app
 const app = express();
@@ -16,12 +12,14 @@ const MONGODB_URI = process.env.MONGODB_URI ;
 if (!MONGODB_URI) {
   throw new Error("MONGODB_URI is not defined in environment variables");
 }
+
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
 .then(() => {
   console.log('MongoDB connected');
+  // Once connected, you can start querying and displaying data from MongoDB
   Transaction.find({})
     .then(transactions => {
       console.log('Transactions:', transactions);
@@ -44,12 +42,16 @@ const transactionSchema = new mongoose.Schema({
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 
+
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json()); // Add this line
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Routes
+// Function to play sound
+
+// HTML routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -58,7 +60,7 @@ app.get('/styles.css', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'styles.css'));
 });
 
-// ✅ Credit API
+// API routes
 app.post('/credit', async (req, res) => {
   const { amount } = req.body;
   if (amount < 0) {
@@ -67,36 +69,26 @@ app.post('/credit', async (req, res) => {
   try {
     const newTransaction = new Transaction({ type: 'Credit', amount });
     await newTransaction.save();
-
+    
+    // Update balance
     const transactions = await Transaction.find();
     const totalCredit = transactions.reduce((acc, curr) => curr.type === 'Credit' ? acc + curr.amount : acc, 0);
     const totalDebit = transactions.reduce((acc, curr) => curr.type === 'Debit' ? acc + curr.amount : acc, 0);
     const totalBalance = totalCredit - totalDebit;
-
+    
     newTransaction.balance = totalBalance;
     await newTransaction.save();
 
-    // ✅ Send message to SQS
-    console.log('📤 Attempting to send SQS message...');
-    await sendToSQS({
-      type: 'CREDIT',
-      payload: {
-        transactionId: newTransaction._id,
-        amount: newTransaction.amount,
-        balance: newTransaction.balance,
-        timestamp: newTransaction.timestamp
-      }
-    });
+    // Play sound for credit successful
 
     res.send(`Credit successful. Amount: ${amount}`);
-    console.log(`Credit Transaction: Amount = ${amount}, New Balance = ${newTransaction.balance}`);
+    console.log(`Credit Transaction: Amount = ${amount}, New Balance = ${newTransaction.balance}`); // Log the transaction details
   } catch (error) {
-    console.error('Credit error:', error);
     res.status(500).send('Internal Server Error');
   }
 });
 
-// ✅ Debit API
+
 app.post('/debit', async (req, res) => {
   const { amount } = req.body;
   if (amount < 0) {
@@ -109,35 +101,24 @@ app.post('/debit', async (req, res) => {
     const totalBalance = totalCredit - totalDebit;
 
     if (amount > totalBalance) {
-      return res.status(400).send('Insufficient balance');
+      res.status(400).send('Insufficient balance');
+    } else {
+      const newTransaction = new Transaction({ type: 'Debit', amount });
+      await newTransaction.save();
+      
+      // Update balance
+      newTransaction.balance = totalBalance - amount;
+      await newTransaction.save();
+
+
+      res.send(`Debit successful. Amount: ${amount}`);
+      console.log(`Debit Transaction: Amount = ${amount}, New Balance = ${newTransaction.balance}`); // Log the transaction details
     }
-
-    const newTransaction = new Transaction({ type: 'Debit', amount });
-    await newTransaction.save();
-
-    newTransaction.balance = totalBalance - amount;
-    await newTransaction.save();
-
-    // ✅ Send message to SQS
-    await sendToSQS({
-      type: 'DEBIT',
-      payload: {
-        transactionId: newTransaction._id,
-        amount: newTransaction.amount,
-        balance: newTransaction.balance,
-        timestamp: newTransaction.timestamp
-      }
-    });
-
-    res.send(`Debit successful. Amount: ${amount}`);
-    console.log(`Debit Transaction: Amount = ${amount}, New Balance = ${newTransaction.balance}`);
   } catch (error) {
-    console.error('Debit error:', error);
     res.status(500).send('Internal Server Error');
   }
 });
 
-// Balance API
 app.get('/balance', async (req, res) => {
   try {
     const transactions = await Transaction.find();
@@ -149,7 +130,6 @@ app.get('/balance', async (req, res) => {
   }
 });
 
-// Transaction history API
 app.get('/history', async (req, res) => {
   try {
     const transactions = await Transaction.find().sort({ timestamp: 'desc' });
@@ -159,7 +139,7 @@ app.get('/history', async (req, res) => {
   }
 });
 
-// Start server
+// Server start
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
