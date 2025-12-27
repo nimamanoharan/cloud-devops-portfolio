@@ -22,6 +22,6 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./project-03-cicd-github-actions/backend
           push: true
           tags: nimadockerhub05/transaction-backend:latest
