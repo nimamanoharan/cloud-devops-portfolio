@@ -1,5 +1,4 @@
-name: Docker CI Pipeline
-
+name: Docker CI Pipeline v1
 on:
   push:
     branches:
