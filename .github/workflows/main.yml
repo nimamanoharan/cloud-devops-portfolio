@@ -1,5 +1,4 @@
-name: Actions Diagnostic Test
-
+name: Docker CI Pipeline v1
 on:
   push:
     branches:
@@ -7,7 +6,12 @@ on:
       - master
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - run: echo "GitHub Actions is working"
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
