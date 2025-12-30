@@ -138,6 +138,9 @@ app.get('/history', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
 
 // Server start
 app.listen(PORT, () => {
