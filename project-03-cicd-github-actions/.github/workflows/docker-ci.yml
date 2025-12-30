@@ -21,8 +21,9 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t nimadockerhub05/transaction-backend:latest ./project-02-dockerized-app/backend
-
+         docker build --no-cache \
+      -t nimadockerhub05/transaction-backend:latest \
+      ./project-03-dockerized-app/backend
     - name: Push Docker image
       run: |
         docker push nimadockerhub05/transaction-backend:latest
